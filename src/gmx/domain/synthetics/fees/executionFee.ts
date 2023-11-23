@@ -179,6 +179,5 @@ export async function gasLimits(chainId: number): Promise<any> {
         estimatedFeeBaseGasLimit: BigNumber.from(results.estimatedFeeBaseGasLimit.returnValues[0]),
         estimatedFeeMultiplierFactor: BigNumber.from(results.estimatedFeeMultiplierFactor.returnValues[0]),
     };
-    console.log(data)
     return data
 }
