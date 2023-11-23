@@ -1,12 +1,13 @@
 import { EXECUTION_FEE_CONFIG_V2, GAS_PRICE_ADJUSTMENT_MAP } from "../../../config/chains";
 import { bigNumberify } from "../../../lib/numbers";
 import { getProvider } from "../../../lib/rpc";
+import { BigNumber } from 'ethers';
 
-export async function useGasPrice(chainId: number) {
+export async function useGasPrice(chainId: number): Promise<{ gasPrice: BigNumber | undefined }> {
   const executionFeeConfig = EXECUTION_FEE_CONFIG_V2[chainId];
   const provider = getProvider(undefined, chainId);
   if (!provider) {
-    return undefined;
+    return { gasPrice: undefined };
   }
 
   try {
@@ -26,6 +27,6 @@ export async function useGasPrice(chainId: number) {
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
-    return undefined;
+    return { gasPrice: undefined };
   }
 }

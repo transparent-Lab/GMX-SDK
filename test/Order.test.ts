@@ -2,7 +2,9 @@ import { BigNumber } from "ethers";
 import { useMarketsInfo } from "../src/gmx/domain/synthetics/markets";
 import { getPositionKey, usePositionsInfo } from "../src/gmx/domain/synthetics/positions";
 import { getIncreasePositionAmounts } from "../src/gmx/domain/synthetics/trade";
-
+import { estimateExecuteIncreaseOrderGasLimit, gasLimits, getExecutionFee, useGasPrice } from "../src/gmx/domain/synthetics/fees";
+import { createIncreaseOrderTxn } from '../src/gmx/lib/order';
+import { OrderType } from "../src/gmx/domain/synthetics/orders";
 
 describe("orders", () => {
 
@@ -12,7 +14,9 @@ describe("orders", () => {
     const collateralTokenAddress = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
     const indexTokenAddress = "0x47904963fc8b2340414262125aF798B9655E58Cd";
     const isLong = true;
-    it("increase amounts", async () => {
+    const leverage = BigNumber.from(2);
+
+    it("increase", async () => {
         const { marketsInfoData, tokensData } = await useMarketsInfo(chainId, account);
         let market = marketsInfoData![marketAddress]
         let collateralToken = tokensData![collateralTokenAddress]
@@ -27,7 +31,7 @@ describe("orders", () => {
         const posKey = getPositionKey(account, marketAddress, collateralTokenAddress, isLong)
 
         debugger
-        const increasePositionAmounts = getIncreasePositionAmounts({
+        const increaseAmounts = getIncreasePositionAmounts({
             marketInfo: market,
             indexToken: tokensData![indexTokenAddress],
             initialCollateralToken: collateralToken,
@@ -35,14 +39,44 @@ describe("orders", () => {
             isLong: isLong,
             initialCollateralAmount: BigNumber.from(64),
             position: positionsInfoData![posKey],
-            leverage: BigNumber.from(10),
-            indexTokenAmount: BigNumber.from(100),
+            leverage: leverage,
+            indexTokenAmount: BigNumber.from(0),
             userReferralInfo: undefined,
             strategy: "leverageByCollateral",
             findSwapPath: () => undefined,
         })
 
-        expect(increasePositionAmounts).not.toBeNull()
+        expect(increaseAmounts).not.toBeNull()
+
+        const _gasLimits = await gasLimits(42161)
+        expect(_gasLimits).not.toBeNull()
+
+        const estimatedGas = estimateExecuteIncreaseOrderGasLimit(_gasLimits, {
+            swapsCount: increaseAmounts.swapPathStats?.swapPath.length,
+        });
+
+        const { gasPrice } = await useGasPrice(chainId);
+        const executionFee = getExecutionFee(_gasLimits, tokensData!, estimatedGas, gasPrice!)
+        expect(executionFee).not.toBeNull()
+
+        const tx = await createIncreaseOrderTxn(chainId, {
+            account: account,
+            marketAddress: marketAddress,
+            initialCollateralAddress: collateralTokenAddress,
+            initialCollateralAmount: increaseAmounts.initialCollateralAmount,
+            swapPath: increaseAmounts.swapPathStats?.swapPath || [],
+            sizeDeltaUsd: increaseAmounts.sizeDeltaUsd,
+            acceptablePrice: increaseAmounts.acceptablePrice,
+            triggerPrice: undefined,
+            isLong: false,
+            orderType: OrderType.MarketIncrease,
+            executionFee: executionFee?.feeTokenAmount!,
+            allowedSlippage: 0,
+            referralCode: undefined,
+            indexToken: tokensData![indexTokenAddress]
+        });
+
+        expect(tx).not.toBeNull()
     }, 1e6);
 
 });
