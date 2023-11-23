@@ -67,6 +67,30 @@ export const GAS_PRICE_ADJUSTMENT_MAP: { [k: number]: string } = {
 };
 
 
+export const EXECUTION_FEE_CONFIG_V2: {
+    [chainId: number]: {
+        shouldUseMaxPriorityFeePerGas: boolean;
+        defaultBufferBps?: number;
+    };
+} = {
+    [AVALANCHE]: {
+        shouldUseMaxPriorityFeePerGas: true,
+        defaultBufferBps: 1000, // 10%
+    },
+    [AVALANCHE_FUJI]: {
+        shouldUseMaxPriorityFeePerGas: true,
+        defaultBufferBps: 1000, // 10%
+    },
+    [ARBITRUM]: {
+        shouldUseMaxPriorityFeePerGas: false,
+        defaultBufferBps: 1000, // 10%
+    },
+    [ARBITRUM_GOERLI]: {
+        shouldUseMaxPriorityFeePerGas: false,
+        defaultBufferBps: 1000, // 10%
+    },
+};
+
 
 export function getRpcUrl(chainId: number): string | undefined {
     return sample(RPC_PROVIDERS[chainId]);
@@ -74,5 +98,4 @@ export function getRpcUrl(chainId: number): string | undefined {
 
 export function getFallbackRpcUrl(chainId: number): string | undefined {
     return sample(FALLBACK_PROVIDERS[chainId]);
-  }
-  
+}
