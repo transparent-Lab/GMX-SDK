@@ -15,12 +15,13 @@ import Token from "../src/gmx/abis/Token.json";
 describe("orders", () => {
 
     const chainId = 42161;
-    const account = '0x23b27875ad09d21517101a7f83499c38f7ec2d2a';
+    // const account = '0x23b27875ad09d21517101a7f83499c38f7ec2d2a';
+    const account = "0x23B27875ad09d21517101a7f83499C38F7eC2D2a";
     const marketAddress = "0x47c031236e19d024b42f8AE6780E44A573170703";
     const collateralTokenAddress = "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
     // const indexTokenAddress = "0x47904963fc8b2340414262125aF798B9655E58Cd";
     const isLong = true;
-    const leverage = BigNumber.from(2);
+    const leverage = BigNumber.from(20_000); // x2
     const initialCollateralAmount = BigNumber.from(10_000_000)
     const priKey = process.env.PRIVATE_KEY
 
