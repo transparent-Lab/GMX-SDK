@@ -1,0 +1,18 @@
+{
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "useBuiltIns": "false",
+          "corejs": "3",
+          "targets": {
+            "chrome": "58"
+          }
+        }
+      ],
+      "@babel/preset-typescript"
+    ],
+    "sourceMaps": "both",
+    "retainLines": true
+  }
+  

@@ -88,7 +88,7 @@ export async function usePositions(
                 }
 
                 // ERC55 formatted address returned by the contract
-                 const positionKey = getPositionKey(account.toLowerCase(), marketAddress, collateralTokenAddress, flags.isLong);
+                 const positionKey = getPositionKey(account, marketAddress, collateralTokenAddress, flags.isLong);
                 const contractPositionKey = keysAndPrices!.contractPositionsKeys[i];
                 positionsMap[positionKey] = {
                     key: positionKey,
