@@ -13,6 +13,8 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     library: "js_lib",
     libraryTarget: "window",
+    publicPath: '',
+    globalObject: 'this'
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
