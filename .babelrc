@@ -6,7 +6,7 @@
           "useBuiltIns": "false",
           "corejs": "3",
           "targets": {
-            "chrome": "58" // 或者你的目标环境
+            "chrome": "58"
           }
         }
       ],
