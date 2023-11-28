@@ -6,8 +6,10 @@ import { useUserReferralInfo } from "./domain/referrals";
 import { estimateExecuteIncreaseOrderGasLimit, gasLimits, getExecutionFee, useGasPrice } from "./domain/synthetics/fees";
 import { createDecreaseOrderTxn, createIncreaseOrderTxn } from "./lib/order";
 import { OrderType } from "./types";
+import eip55 from 'eip55';
 
 export async function fetchMarkets(chainId: number, account: string) {
+    account = eip55.encode(account)
     const { marketsInfoData, tokensData } = await useMarketsInfo(chainId, account);
     return { markets: marketsInfoData, tokens: tokensData }
 }
@@ -15,6 +17,7 @@ export async function fetchMarkets(chainId: number, account: string) {
 export { getPositionKey } from "./domain/synthetics/positions";
 
 export async function fetchPositions(chainId: number, account: string) {
+    account = eip55.encode(account)
     const { marketsInfoData, tokensData } = await useMarketsInfo(chainId, account);
     const { positionsInfoData } = await usePositionsInfo(chainId, {
         account: account,
@@ -38,6 +41,8 @@ type IncreaseOrderReq = {
 }
 
 export async function createIncreaseOrder(p: IncreaseOrderReq) {
+    p.account = eip55.encode(p.account)
+
     const values = await Promise.all([
         useMarketsInfo(p.chainId, p.account),
         useUserReferralInfo(undefined, p.chainId, p.account, true),
@@ -114,6 +119,7 @@ type DecreaseOrderReq = {
 }
 
 export async function createDecreaseOrder(p: DecreaseOrderReq) {
+    p.account = eip55.encode(p.account)
     const values = await Promise.all([
         useMarketsInfo(p.chainId, p.account),
         useUserReferralInfo(undefined, p.chainId, p.account, true),
