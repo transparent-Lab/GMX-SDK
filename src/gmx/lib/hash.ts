@@ -1,3 +1,4 @@
+import "@ethersproject/shims";
 import { ethers } from "ethers";
 
 export function hashData(dataTypes: readonly (string | ethers.utils.ParamType)[], dataValues: readonly any[]) {

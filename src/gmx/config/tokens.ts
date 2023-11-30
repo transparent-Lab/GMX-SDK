@@ -1,4 +1,5 @@
 // import { Token } from "domain/tokens";
+import "@ethersproject/shims";
 import { ethers } from "ethers";
 import { ARBITRUM, ARBITRUM_GOERLI, AVALANCHE, AVALANCHE_FUJI } from "./chains";
 import { getContract } from "./contracts";

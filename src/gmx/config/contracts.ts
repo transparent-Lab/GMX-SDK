@@ -1,3 +1,4 @@
+import "@ethersproject/shims";
 import { ethers } from "ethers";
 import { ARBITRUM, ARBITRUM_GOERLI, AVALANCHE, AVALANCHE_FUJI, BCS_MAINNET, BCS_TESTNET } from "./chains";
 

@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/shims": "^5.7.0",
     "@ethersproject/solidity": "^5.7.0",
     "@uniswap/sdk": "^3.0.3",
     "@uniswap/sdk-core": "^4",
@@ -36,10 +37,10 @@
     "@uniswap/v3-periphery": "^1.1.1",
     "@uniswap/v3-staker": "1.0.0",
     "graphql-request": "^6.1.0",
+    "jsbi": "^4.3.0",
     "lodash.keyby": "^4.6.0",
     "query-string": "7.1.1",
-    "viem": "1.1.4",
-    "web3-utils": "^4.0.7"
+    "viem": "1.1.4"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.22.10",
@@ -59,7 +60,8 @@
     "tsdx": "^0.14.1",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "webpack-node-externals": "^3.0.0"
   },
   "engines": {
     "node": ">=10"

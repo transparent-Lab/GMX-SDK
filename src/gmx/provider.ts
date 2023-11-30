@@ -1,3 +1,4 @@
+import "@ethersproject/shims";
 import { ethers } from "ethers";
 
 export const rpcUrl: string = "https://arb1.arbitrum.io/rpc"

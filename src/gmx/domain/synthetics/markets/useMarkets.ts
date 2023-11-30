@@ -1,6 +1,7 @@
 import SyntheticsReader from "../../../abis/SyntheticsReader.json";
 import { getContract } from "../../../config/contracts";
 import { convertTokenAddress, getToken } from "../../../config/tokens";
+import "@ethersproject/shims";
 import { ethers } from "ethers";
 import { useMulticall } from "../../../lib/multicall";
 import { MarketsData } from "./types";
