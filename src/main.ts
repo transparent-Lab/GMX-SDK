@@ -7,5 +7,7 @@ export const uniswap = {
 
 export const gmx = {
     fetchPositions,
-    createIncreaseOrder, createDecreaseOrder, fetchMarkets
+    createIncreaseOrder,
+    createDecreaseOrder,
+    fetchMarkets
 }

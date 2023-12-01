@@ -4,7 +4,7 @@ const BASIS_POINTS_DIVISOR = 10000;
 const PRECISION = expandDecimals(1, 30);
 export function bigNumberify(n?: BigNumberish) {
   try {
-    return BigNumber.from(n);
+    return BigNumber.from(n?.toString());
   } catch (e) {
     return undefined;
   }

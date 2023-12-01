@@ -1,3 +1,4 @@
+import "@ethersproject/shims";
 import CustomErrors from "../../abis/CustomErrors.json";
 import { getRpcUrl } from "../consts";
 import { MulticallRequestConfig, MulticallResult } from "./types";
@@ -6,7 +7,8 @@ import { Contract, providers, constants } from "ethers";
 import { sleep } from "../sleep";
 import { getProvider } from "../rpc";
 import { getContract } from '../../config/contracts';
-import { abi } from '../../abis/Multicall.json';
+import mutilcall from '../../abis/Multicall.json';
+import { Interface } from "@ethersproject/abi";
 // import { callContract } from "../contracts";
 
 
@@ -18,8 +20,13 @@ export async function executeMulticall(
   request: MulticallRequestConfig<any>
 ) {
   const multicall = await Multicall.getInstance(chainId);
-
-  return multicall?.call(request, MAX_TIMEOUT);
+  try {
+    console.log('start multicall', Object.keys(request));
+    return multicall?.call(request, MAX_TIMEOUT)
+  } catch (e) {
+    console.error("multicall.call error", e)
+    return undefined
+  }
 }
 
 export class Multicall {
@@ -34,6 +41,7 @@ export class Multicall {
       const rpcUrl = getRpcUrl(chainId);
 
       if (!rpcUrl) {
+        console.error("get rpcUrl error", chainId, rpcUrl)
         return undefined;
       }
 
@@ -50,29 +58,27 @@ export class Multicall {
   constructor(public chainId: number, public rpcUrl: string) {
     const addr = getContract(chainId, "Multicall");
     const provider = getProvider(undefined, this.chainId) as providers.JsonRpcProvider;
-    this.multicall = new Contract(addr, abi, provider!.getSigner(constants.AddressZero));
+    this.multicall = new Contract(addr, mutilcall.abi, provider);
   }
 
   async call(request: MulticallRequestConfig<any>, maxTimeout: number) {
     const originalKeys: {
       contractKey: string;
       callKey: string;
-      contract: Contract;
+      abi: any;
       method?: string;
     }[] = [];
 
     const abis: any = {};
 
-    const encodedPayload: { address: string; abi: any; functionName: string; args: any }[] = [];
-
     const contractKeys = Object.keys(request);
-
     const nameCalls: { target: string, allowFailure?: boolean, callData: any }[] = [];
 
     contractKeys.forEach((contractKey) => {
       const contractCallConfig = request[contractKey];
 
       if (!contractCallConfig) {
+        console.log("contractCallConfig not found", contractKey);
         return;
       }
 
@@ -80,6 +86,7 @@ export class Multicall {
         const call = contractCallConfig.calls[callKey];
 
         if (!call) {
+          console.log("call not found", callKey);
           return;
         }
 
@@ -93,37 +100,30 @@ export class Multicall {
         originalKeys.push({
           contractKey,
           callKey,
-          contract: ct,
+          abi,
           method: call.methodName
         });
 
         nameCalls.push({
           target: contractCallConfig.contractAddress,
-          allowFailure: true,
+          allowFailure: false,
           callData: ct.interface.encodeFunctionData(call.methodName, call.params)
         })
-
-        encodedPayload.push({
-          address: contractCallConfig.contractAddress,
-          functionName: call.methodName,
-          abi,
-          args: call.params,
-        });
       });
     });
 
     const response: any = await Promise.race([
-      this.multicall.callStatic.aggregate3(nameCalls),
+      this.multicall.callStatic['aggregate3'](nameCalls),
       sleep(maxTimeout).then(() => Promise.reject(new Error("multicall timeout"))),
     ]).catch((_viemError) => {
       const e = new Error(_viemError.message.slice(0, 150));
 
       // eslint-disable-next-line no-console
-      console.groupCollapsed("multicall error:");
+      // console.groupCollapsed("multicall error:");
       // eslint-disable-next-line no-console
       console.error(e);
       // eslint-disable-next-line no-console
-      console.groupEnd();
+      // console.groupEnd();
 
       // eslint-disable-next-line no-console
       console.log(`using multicall fallback for chain ${this.chainId}`);
@@ -136,16 +136,16 @@ export class Multicall {
     };
 
     response.forEach(({ success, returnData }: any, i: number) => {
-      const { contractKey, callKey, contract, method } = originalKeys[i];
+      const { contractKey, callKey, abi, method } = originalKeys[i];
 
-      if(success) {
+      if (success) {
         multicallResult.data[contractKey] = multicallResult.data[contractKey] || {};
 
-        let vals = contract.interface.decodeFunctionResult(method!, returnData);
+        let vals = new Interface(abi).decodeFunctionResult(method!, returnData);
         let result = vals.length === 1 ? vals[0] : vals;
         let values = undefined;
 
-        if (Array.isArray(result) ) {
+        if (Array.isArray(result)) {
           values = result;
         } else {
           values = [result];

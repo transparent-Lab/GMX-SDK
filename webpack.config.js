@@ -13,13 +13,13 @@ module.exports = {
     library: "js_lib",
     libraryTarget: "window",
     publicPath: '',
-    globalObject: 'this'
+    globalObject: 'this',
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
   },
   optimization: {
-    minimize: false,
+    minimize: true,
     minimizer: [
       new TerserPlugin({
         terserOptions: {
