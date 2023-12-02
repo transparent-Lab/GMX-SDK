@@ -4,7 +4,7 @@ import { getDecreasePositionAmounts, getIncreasePositionAmounts, useSwapRoutes }
 import { getPositionKey, usePositionsInfo } from "./domain/synthetics/positions";
 import { useUserReferralInfo } from "./domain/referrals";
 import { estimateExecuteIncreaseOrderGasLimit, gasLimits, getExecutionFee, useGasPrice } from "./domain/synthetics/fees";
-import { createDecreaseOrderTxn, createIncreaseOrderTxn } from "./lib/order";
+import { cancelOrdersTxn, createDecreaseOrderTxn, createIncreaseOrderTxn } from "./lib/order";
 import { OrderType, TokensData } from "./types";
 import { getContract } from "./config/contracts";
 import ExchangeRouter from "./abis/ExchangeRouter.json";
@@ -214,4 +214,13 @@ export async function createDecreaseOrder(p: DecreaseOrderReq) {
     const abi = ExchangeRouter.abi;
     const method = "multicall";
     return { tx, address, abi, method }
+}
+
+
+export {
+    useOrders as fetchOrders
+} from "./lib/order"
+
+export async function cancelOrder(chainId: number, keys: string[]) {
+    return cancelOrdersTxn(chainId, { orderKeys: keys, setPendingTxns: () => {} });
 }
