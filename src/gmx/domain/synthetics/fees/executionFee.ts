@@ -1,3 +1,4 @@
+import "@ethersproject/shims";
 import { ethers } from "ethers";
 import { ExecutionFee, GasLimitsConfig, TokensData } from "../../../types";
 import { BigNumber } from "ethers";

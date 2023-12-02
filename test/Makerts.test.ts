@@ -1,6 +1,7 @@
 
 import { useMarkets, useMarketsInfo } from "../src/gmx/domain/synthetics/markets"
 import { useTokensData} from "../src/gmx/domain/synthetics/tokens";
+import { fetchMarkets } from "../src/gmx/index";
 
 describe("markets", () => {
     it("markets", async () => {
@@ -22,4 +23,10 @@ describe("markets", () => {
         console.log("tokens", tokens)
         expect(tokens).not.toBeNull;
     })
+
+    it("fetch_markets", async () => {
+        debugger
+        var markets = await fetchMarkets(42161, "0x23b27875ad09d21517101a7f83499c38f7ec2d2a")
+        expect(markets).not.toBeNull;
+    }, 1e6);
 })

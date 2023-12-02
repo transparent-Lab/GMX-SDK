@@ -1,3 +1,4 @@
+import "@ethersproject/shims";
 import { ethers } from "ethers";
 
 const MAX_REFERRAL_CODE_LENGTH = 20;

@@ -33,6 +33,8 @@ export async function useMulticall<TConfig extends MulticallRequestConfig<any>, 
       throw new Error(`Multicall request is empty`);
     }
 
+    console.log("useMulticall", "executeMulticall");
+
     const response = await executeMulticall(chainId, request);
 
     if (!response) {

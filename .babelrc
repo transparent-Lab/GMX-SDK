@@ -13,6 +13,6 @@
       "@babel/preset-typescript"
     ],
     "sourceMaps": "both",
-    "retainLines": true
+    "retainLines": true,
   }
   

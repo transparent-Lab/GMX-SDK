@@ -1,6 +1,5 @@
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
-
 module.exports = {
   entry: [
     './src/main.ts'
@@ -13,6 +12,8 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     library: "js_lib",
     libraryTarget: "window",
+    publicPath: '',
+    globalObject: 'this',
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
@@ -52,4 +53,7 @@ module.exports = {
       // }
     ],
   },
+
+  plugins: [
+  ]
 };

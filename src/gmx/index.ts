@@ -1,28 +1,55 @@
-import { useMarketsInfo } from "./domain/synthetics/markets";
-import { BigNumber } from "ethers";
+import { MarketsInfoData, useMarketsInfo } from "./domain/synthetics/markets";
+import { BigNumber, utils } from "ethers";
 import { getDecreasePositionAmounts, getIncreasePositionAmounts, useSwapRoutes } from "./domain/synthetics/trade";
 import { getPositionKey, usePositionsInfo } from "./domain/synthetics/positions";
 import { useUserReferralInfo } from "./domain/referrals";
 import { estimateExecuteIncreaseOrderGasLimit, gasLimits, getExecutionFee, useGasPrice } from "./domain/synthetics/fees";
 import { createDecreaseOrderTxn, createIncreaseOrderTxn } from "./lib/order";
-import { OrderType } from "./types";
+import { OrderType, TokensData } from "./types";
+import { getContract } from "./config/contracts";
+import ExchangeRouter from "./abis/ExchangeRouter.json";
+
+const caches: {
+    marketsInfoData?: MarketsInfoData;
+    tokensData?: TokensData;
+} = {}
+
+async function getMarketsInfo(chainId: number, account: string) {
+    let { marketsInfoData, tokensData } = caches;
+    if (!marketsInfoData || !tokensData) {
+        var info = await useMarketsInfo(chainId, account);
+        marketsInfoData = info.marketsInfoData;
+        tokensData = info.tokensData;
+        caches.marketsInfoData = marketsInfoData;
+        caches.tokensData = tokensData;
+    }
+    return { marketsInfoData, tokensData };
+}
 
 export async function fetchMarkets(chainId: number, account: string) {
-    const { marketsInfoData, tokensData } = await useMarketsInfo(chainId, account);
+    account = utils.getAddress(account)
+    const { marketsInfoData, tokensData } = await getMarketsInfo(chainId, account);
     return { markets: marketsInfoData, tokens: tokensData }
 }
 
 export { getPositionKey } from "./domain/synthetics/positions";
 
 export async function fetchPositions(chainId: number, account: string) {
-    const { marketsInfoData, tokensData } = await useMarketsInfo(chainId, account);
-    const { positionsInfoData } = await usePositionsInfo(chainId, {
-        account: account,
-        marketsInfoData: marketsInfoData,
-        tokensData: tokensData,
-        showPnlInLeverage: false
-    })
-    return positionsInfoData
+    try {
+        account = utils.getAddress(account);
+        let { marketsInfoData, tokensData } = await getMarketsInfo(chainId, account);
+        const { positionsInfoData } = await usePositionsInfo(chainId, {
+            account: account,
+            marketsInfoData: marketsInfoData,
+            tokensData: tokensData,
+            showPnlInLeverage: false
+        })
+        return positionsInfoData
+    }
+    catch (e) {
+        console.error("fetchPositions error", e)
+        throw e;
+    }
 }
 
 type IncreaseOrderReq = {
@@ -30,16 +57,19 @@ type IncreaseOrderReq = {
     account: string,
     marketAddress: string,
     collateralTokenAddress: string,
-    initialCollateralAmount: BigNumber,
-    leverage: BigNumber,
-    triggerPrice?: BigNumber,
+    initialCollateralAmount: string,
+    leverage: string,
+    triggerPrice?: string,
     isLong: boolean,
+    slippage: number,
     orderType: OrderType.LimitIncrease | OrderType.MarketIncrease
 }
 
 export async function createIncreaseOrder(p: IncreaseOrderReq) {
+    p.account = utils.getAddress(p.account)
+
     const values = await Promise.all([
-        useMarketsInfo(p.chainId, p.account),
+        getMarketsInfo(p.chainId, p.account),
         useUserReferralInfo(undefined, p.chainId, p.account, true),
         gasLimits(p.chainId),
         useGasPrice(p.chainId)])
@@ -70,9 +100,9 @@ export async function createIncreaseOrder(p: IncreaseOrderReq) {
         initialCollateralToken: collateralToken,
         collateralToken: collateralToken,
         isLong: p.isLong,
-        initialCollateralAmount: p.initialCollateralAmount,
+        initialCollateralAmount: BigNumber.from(p.initialCollateralAmount),
         position: positionsInfoData![posKey],
-        leverage: p.leverage,
+        leverage: BigNumber.from(p.leverage),
         indexTokenAmount: BigNumber.from(0),
         userReferralInfo: userReferralInfo,
         strategy: "leverageByCollateral",
@@ -89,19 +119,23 @@ export async function createIncreaseOrder(p: IncreaseOrderReq) {
         account: p.account,
         marketAddress: p.marketAddress,
         initialCollateralAddress: p.collateralTokenAddress,
-        initialCollateralAmount: p.initialCollateralAmount,
+        initialCollateralAmount: BigNumber.from(p.initialCollateralAmount),
         swapPath: increaseAmounts.swapPathStats?.swapPath || [],
         sizeDeltaUsd: increaseAmounts.sizeDeltaUsd,
         acceptablePrice: increaseAmounts.acceptablePrice,
-        triggerPrice: p.triggerPrice,
+        triggerPrice: p.triggerPrice ? BigNumber.from(p.triggerPrice) : undefined,
         isLong: p.isLong,
         orderType: p.orderType,
         executionFee: executionFee?.feeTokenAmount!,
-        allowedSlippage: 0,
+        allowedSlippage: p.slippage ?? 0,
         referralCode: userReferralInfo?.userReferralCode,
         indexToken: market.indexToken
     });
-    return tx
+
+    const address = getContract(p.chainId, "ExchangeRouter");
+    const abi = ExchangeRouter.abi;
+    const method = "multicall";
+    return { tx, address, abi, method }
 }
 
 type DecreaseOrderReq = {
@@ -110,12 +144,15 @@ type DecreaseOrderReq = {
     marketAddress: string,
     collateralTokenAddress: string,
     isLong: boolean,
+    slippage: number,
+    closeSizeUsd: string,
     orderType: OrderType.LimitDecrease | OrderType.MarketDecrease
 }
 
 export async function createDecreaseOrder(p: DecreaseOrderReq) {
+    p.account = utils.getAddress(p.account)
     const values = await Promise.all([
-        useMarketsInfo(p.chainId, p.account),
+        getMarketsInfo(p.chainId, p.account),
         useUserReferralInfo(undefined, p.chainId, p.account, true),
         gasLimits(p.chainId),
         useGasPrice(p.chainId)])
@@ -138,7 +175,7 @@ export async function createDecreaseOrder(p: DecreaseOrderReq) {
         isLong: p.isLong,
         position: positionsInfoData![posKey],
         userReferralInfo: undefined,
-        closeSizeUsd: BigNumber.from(5),
+        closeSizeUsd: BigNumber.from(p.closeSizeUsd),
         keepLeverage: false,
         minCollateralUsd: BigNumber.from(0),
         minPositionSizeUsd: BigNumber.from(0)
@@ -167,10 +204,14 @@ export async function createDecreaseOrder(p: DecreaseOrderReq) {
         decreasePositionSwapType: decreaseAmounts.decreaseSwapType,
         orderType: p.orderType,
         executionFee: executionFee?.feeTokenAmount!,
-        allowedSlippage: 0,
+        allowedSlippage: p.slippage ?? 0,
         referralCode: undefined,
         indexToken: market.indexToken,
         tokensData: tokensData!
     });
-    return tx
+
+    const address = getContract(p.chainId, "ExchangeRouter");
+    const abi = ExchangeRouter.abi;
+    const method = "multicall";
+    return { tx, address, abi, method }
 }
