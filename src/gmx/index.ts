@@ -217,7 +217,11 @@ export async function createDecreaseOrder(p: DecreaseOrderReq) {
 }
 
 export async function cancelOrder(chainId: number, keys: string[]) {
-    return await cancelOrdersTxn(chainId, { orderKeys: keys, setPendingTxns: () => { } });
+    const address = getContract(chainId, "ExchangeRouter");
+    const abi = ExchangeRouter.abi;
+    const method = "multicall";
+    const tx = await cancelOrdersTxn(chainId, { orderKeys: keys, setPendingTxns: () => { } });
+    return { tx, address, abi, method }
 }
 
 export async function fetchOrders(chainId: number, account: string) {
