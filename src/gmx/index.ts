@@ -146,6 +146,7 @@ type DecreaseOrderReq = {
     isLong: boolean,
     slippage: number,
     closeSizeUsd: string,
+    triggerPrice: string,
     orderType: OrderType.LimitDecrease | OrderType.MarketDecrease
 }
 
@@ -177,6 +178,7 @@ export async function createDecreaseOrder(p: DecreaseOrderReq) {
         userReferralInfo: undefined,
         closeSizeUsd: BigNumber.from(p.closeSizeUsd),
         keepLeverage: false,
+        triggerPrice: p.triggerPrice == null ? undefined : BigNumber.from(p.triggerPrice),
         minCollateralUsd: BigNumber.from(0),
         minPositionSizeUsd: BigNumber.from(0)
     })

@@ -1,4 +1,4 @@
-import { fetchPositions, createIncreaseOrder, createDecreaseOrder, fetchMarkets } from './gmx'
+import { fetchPositions, createIncreaseOrder, createDecreaseOrder, fetchMarkets, fetchOrders, cancelOrder } from './gmx'
 import { fetchTicksSurroundingPrice } from './uniswap/depth'
 
 export const uniswap = {
@@ -9,5 +9,7 @@ export const gmx = {
     fetchPositions,
     createIncreaseOrder,
     createDecreaseOrder,
-    fetchMarkets
+    fetchMarkets,
+    fetchOrders,
+    cancelOrder
 }
