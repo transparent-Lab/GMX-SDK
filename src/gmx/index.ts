@@ -4,7 +4,7 @@ import { getDecreasePositionAmounts, getIncreasePositionAmounts, useSwapRoutes }
 import { getPositionKey, usePositionsInfo } from "./domain/synthetics/positions";
 import { useUserReferralInfo } from "./domain/referrals";
 import { estimateExecuteIncreaseOrderGasLimit, gasLimits, getExecutionFee, useGasPrice } from "./domain/synthetics/fees";
-import { createDecreaseOrderTxn, createIncreaseOrderTxn } from "./lib/order";
+import { cancelOrdersTxn, createDecreaseOrderTxn, createIncreaseOrderTxn, useOrders } from "./lib/order";
 import { OrderType, TokensData } from "./types";
 import { getContract } from "./config/contracts";
 import ExchangeRouter from "./abis/ExchangeRouter.json";
@@ -146,6 +146,7 @@ type DecreaseOrderReq = {
     isLong: boolean,
     slippage: number,
     closeSizeUsd: string,
+    triggerPrice: string,
     orderType: OrderType.LimitDecrease | OrderType.MarketDecrease
 }
 
@@ -177,6 +178,7 @@ export async function createDecreaseOrder(p: DecreaseOrderReq) {
         userReferralInfo: undefined,
         closeSizeUsd: BigNumber.from(p.closeSizeUsd),
         keepLeverage: false,
+        triggerPrice: p.triggerPrice == null ? undefined : BigNumber.from(p.triggerPrice),
         minCollateralUsd: BigNumber.from(0),
         minPositionSizeUsd: BigNumber.from(0)
     })
@@ -214,4 +216,16 @@ export async function createDecreaseOrder(p: DecreaseOrderReq) {
     const abi = ExchangeRouter.abi;
     const method = "multicall";
     return { tx, address, abi, method }
+}
+
+export async function cancelOrder(chainId: number, keys: string[]) {
+    const address = getContract(chainId, "ExchangeRouter");
+    const abi = ExchangeRouter.abi;
+    const method = "multicall";
+    const tx = await cancelOrdersTxn(chainId, { orderKeys: keys, setPendingTxns: () => { } });
+    return { tx, address, abi, method }
+}
+
+export async function fetchOrders(chainId: number, account: string) {
+    return await useOrders(chainId, { account })
 }
