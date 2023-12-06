@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish, Signer, ethers } from "ethers";
+import { BigNumber, BigNumberish, Signer, ethers , providers} from "ethers";
 
 import ReferralStorage from "../../../abis/ReferralStorage.json";
 import Timelock from "../../../abis/Timelock.json";
@@ -62,9 +62,10 @@ export async function useUserReferralInfo(
   };
 }
 
-export async function useAffiliateTier(signer: Signer, chainId: number, account: string) {
+export async function useAffiliateTier(signer: Signer | undefined, chainId: number, account: string) {
   const referralStorageAddress = getContract(chainId, "ReferralStorage");
-  const contract = new ethers.Contract(referralStorageAddress, ReferralStorage.abi, signer);
+  const provider = getProvider(signer, chainId);
+  const contract = new ethers.Contract(referralStorageAddress, ReferralStorage.abi, provider);
   let res = await callContract(chainId, contract, "referrerTiers", [account], {});
 
   return {
@@ -74,7 +75,8 @@ export async function useAffiliateTier(signer: Signer, chainId: number, account:
 
 export async function useTiers(signer: Signer | undefined, chainId: number, tierLevel?: BigNumberish) {
   const referralStorageAddress = getContract(chainId, "ReferralStorage");
-  const contract = new ethers.Contract(referralStorageAddress, ReferralStorage.abi, signer);
+  const provider = getProvider(signer, chainId);
+  const contract = new ethers.Contract(referralStorageAddress, ReferralStorage.abi, provider);
   let res = await callContract(chainId, contract, "tiers", [tierLevel!.toString()], {}) as BigNumber[];
   return {
     totalRebate: res[0],

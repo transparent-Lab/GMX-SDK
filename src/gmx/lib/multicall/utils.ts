@@ -57,7 +57,7 @@ export class Multicall {
 
   constructor(public chainId: number, public rpcUrl: string) {
     const addr = getContract(chainId, "Multicall");
-    const provider = getProvider(undefined, this.chainId) as providers.JsonRpcProvider;
+    const provider = getProvider(undefined, chainId);
     this.multicall = new Contract(addr, mutilcall.abi, provider);
   }
 
