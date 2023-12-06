@@ -8,6 +8,7 @@ import { cancelOrdersTxn, createDecreaseOrderTxn, createIncreaseOrderTxn, useOrd
 import { OrderType, TokensData } from "./types";
 import { getContract } from "./config/contracts";
 import ExchangeRouter from "./abis/ExchangeRouter.json";
+import { useTokensAllowanceData } from "./domain/synthetics/tokens";
 
 const caches: {
     marketsInfoData?: MarketsInfoData;
@@ -228,4 +229,13 @@ export async function cancelOrder(chainId: number, keys: string[]) {
 
 export async function fetchOrders(chainId: number, account: string) {
     return await useOrders(chainId, { account })
+}
+
+export async function fetchAllowance(chainId: number, account: string, tokens: string[]) {
+    const spenderAddress = getContract(chainId, "SyntheticsRouter")
+    const { tokensAllowanceData } = await useTokensAllowanceData(chainId, account, {
+        spenderAddress: spenderAddress,
+        tokenAddresses: [...tokens]
+    })
+    return tokensAllowanceData;
 }
