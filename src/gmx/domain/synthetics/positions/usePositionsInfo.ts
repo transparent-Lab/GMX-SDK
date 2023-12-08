@@ -1,5 +1,5 @@
 import { useUserReferralInfo } from "../../../domain/referrals";
-import { BigNumber } from "ethers";
+import { BigNumber, providers } from "ethers";
 import { MAX_ALLOWED_LEVERAGE } from "../../../config/factors";
 import { getBasisPoints } from "../../../lib/numbers";
 import { getByKey } from "../../../lib/objects";
